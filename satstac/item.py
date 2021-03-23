@@ -147,7 +147,11 @@ class Item(Thing):
             fname = self.substitute(filename)
             ext = os.path.splitext(asset['href'])[1]
             fout = os.path.join(_path, fname + '_' + key + ext)
-            if not os.path.exists(fout) or overwrite:
+
+            if os.path.exists(fout) and os.path.getsize(fout) != utils.download_file_size(asset['href']):
+                print ("Detected corrupted size")
+
+            if not os.path.exists(fout) or (os.path.getsize(fout) != utils.download_file_size(asset['href'])) or overwrite:
                 _filename = utils.download_file(asset['href'], filename=fout, requester_pays=requester_pays)
             else:
                 _filename = fout

@@ -51,6 +51,23 @@ def dict_merge(dct, merge_dct, add_keys=True):
 
     return dct
 
+def download_file_size(url, requester_pays=False):
+    # check if on s3, if so try to sign it
+    if 's3' in url:
+        signed_url, signed_headers = get_s3_signed_url(url, requester_pays=requester_pays)
+        resp = requests.head(signed_url)
+        if resp.status_code != 200:
+            resp = requests.head(url)
+    elif 'eosdis.nasa.gov' in url:
+        url = url.replace('/archive/', '/api/v2/content/archives/')
+        resp = requests.head(url)
+    else:
+        resp = requests.head(url)
+    if resp.status_code != 200:
+        raise Exception("Unable to download file %s: %s" % (url, resp.text))
+    size = int(resp.headers['Content-Length'])
+    logger.info('Downloading size of %s is %s' % (url, size))
+    return size
 
 def download_file(url, filename=None, requester_pays=False):
     """ Download a file as filename """
